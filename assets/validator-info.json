@@ -16,7 +16,7 @@
 	{
 		"address": "0xb0E735D4a3b70195420E0ae933689A55750CFcd2",
 		"commission": 0.05,
-		"is_active": true,
+		"is_active": false,
 		"label": "RockawayX",
 		"participation_rate_14d": 0.9999255426082424
 	},
