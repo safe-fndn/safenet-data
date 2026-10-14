@@ -22,11 +22,5 @@
 		"is_active": true,
 		"label": "IntentGuard",
 		"participation_rate_14d": null
-	},
-	{
-		"address": "0x3BF9263Cc7Bb2312F69F5481c3337553469140a5",
-		"is_active": true,
-		"label": "Hacken",
-		"participation_rate_14d": null
 	}
 ]
