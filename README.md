@@ -8,7 +8,7 @@ Data and JSON files for Safenet Beta, Safenet Aegis, and potentially future Safe
 
 ## Network Info
 
-Aggregate network-level stats for Safenet Beta. See [`assets/network-info.json`](./assets/network-info.json) for current data.
+Aggregate network-level stats for the current Safenet version, Safenet Aegis. See [`assets/network-info.json`](./assets/network-info.json) for current data.
 
 ### Example
 
@@ -25,7 +25,9 @@ Total SAFE tokens currently staked, as a decimal string with up to 18 decimal pl
 
 #### `total_transactions_checked`
 
-A monotonically increasing integer counting all `TransactionProposed` events on the consensus contract of a Safenet version since its deployment. Counts are per version and not aggregated across versions. For Safenet Beta, this is [`0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9`](https://gnosisscan.io/address/0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9) on Gnosis Chain.
+A monotonically increasing integer counting the transactions checked by a Safenet version since its deployment. Counts are per version and not aggregated across versions. For Safenet Aegis, this is the number of Sentinel verdicts (approved or denied): `OracleResult` events on the SentinelOracle [`0x4F61B8832978e83b80D69551AEf07557DBE41d03`](https://gnosisscan.io/address/0x4F61B8832978e83b80D69551AEf07557DBE41d03) on Gnosis Chain. Timed-out and disputed requests are not counted.
+
+Safenet Beta counted `TransactionProposed` events on its consensus contract [`0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9`](https://gnosisscan.io/address/0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9) on Gnosis Chain. Its final value is kept in the git tag [`beta-final`](https://github.com/safe-fndn/safenet-data/blob/beta-final/assets/network-info.json).
 
 ---
 
@@ -67,7 +69,7 @@ Commission percentage applied to any possible rewards.
 
 #### `participation_rate_14d`
 
-Average participation rate (%) over the last 14 days. Computed by joining `SignCompleted` events with `SignShared` on `selection_root` and measuring the validator's participation rate across those events.
+Average participation rate (%) over the last 14 days, across the transactions attested by the Safenet Aegis consensus contract [`0xc855761D619f6002923507cE68B84d7689C2aa96`](https://gnosisscan.io/address/0xc855761D619f6002923507cE68B84d7689C2aa96) on Gnosis Chain. Computed by joining `SignCompleted` events with `SignShared` on `selection_root` and measuring the validator's participation rate across those events.
 
 ```json
 "participation_rate_14d": 0.8523
