@@ -31,7 +31,10 @@ This repo stores and serves JSON data for Safenet Beta, Safenet Aegis, and poten
 | Data | Contract | Network |
 |------|----------|---------|
 | `total_staked_amount` | [`0x115E78f160e1E3eF163B05C84562Fa16fA338509`](https://etherscan.io/address/0x115E78f160e1E3eF163B05C84562Fa16fA338509#code) | Ethereum mainnet |
-| `total_transactions_checked` | [`0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9`](https://gnosisscan.io/address/0x223624cBF099e5a8f8cD5aF22aFa424a1d1acEE9) (Safenet Beta) | Gnosis Chain |
+| `total_transactions_checked` | [`0x4F61B8832978e83b80D69551AEf07557DBE41d03`](https://gnosisscan.io/address/0x4F61B8832978e83b80D69551AEf07557DBE41d03) (Safenet Aegis SentinelOracle, requests with at least one `Revealed` event) | Gnosis Chain |
+| `participation_rate_14d` | [`0xC6B34dA4c99C043A093214D58423a8bE39585B78`](https://gnosisscan.io/address/0xC6B34dA4c99C043A093214D58423a8bE39585B78) (Safenet Aegis coordinator, `SignShared` and `SignCompleted` events) and [`0xc855761D619f6002923507cE68B84d7689C2aa96`](https://gnosisscan.io/address/0xc855761D619f6002923507cE68B84d7689C2aa96) (Safenet Aegis consensus, attested transactions) | Gnosis Chain |
+
+Safenet Beta's source and the `beta-final` tag are under `total_transactions_checked` in README.md.
 
 ## Commit hygiene
 
