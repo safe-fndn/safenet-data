@@ -4,14 +4,14 @@
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Gnosis",
-		"participation_rate_14d": 0.9970311726867888
+		"participation_rate_14d": 1
 	},
 	{
 		"address": "0x7B0A8EFA45dE81F11F2846EC28259B62155a2b37",
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Greenfield",
-		"participation_rate_14d": 0.9950519544779812
+		"participation_rate_14d": 1
 	},
 	{
 		"address": "0xb0E735D4a3b70195420E0ae933689A55750CFcd2",
@@ -32,7 +32,7 @@
 		"commission": 0.05,
 		"is_active": false,
 		"label": "Blockchain Capital",
-		"participation_rate_14d": 0.9985155863433943
+		"participation_rate_14d": 0.9993581514762516
 	},
 	{
 		"address": "0xF6EA21D702983c443f58A267265912FE03D2FF0b",
