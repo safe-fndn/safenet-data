@@ -3,8 +3,9 @@
 name: Update Safenet Data
 
 on:
-  schedule:
-    - cron: '0 */3 * * *'  # Daily at midnight and every 3h
+  # Disabled until the workflow is updated for Safenet Aegis.
+  # schedule:
+  #   - cron: '0 */3 * * *'  # Daily at midnight and every 3h
   workflow_dispatch:
     inputs:
       network:
@@ -16,6 +17,8 @@ on:
 
 jobs:
   update:
+    # Disabled until the workflow is updated for Safenet Aegis.
+    if: false
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'data-update-main' || null }}
 
