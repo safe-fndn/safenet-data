@@ -71,7 +71,8 @@ jobs:
             "$IMAGE" \
             totals --record /workspace
 
-      # Update participation rates in assets/validator-info.json.
+      # Update participation rates in assets/validator-info.json and
+      # assets/sentinel-info.json.
       - name: Record Participation
         run: |
           end="$(date -d "$(date '+%H:00:00')" '+%s')"
@@ -93,7 +94,7 @@ jobs:
           make fix
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/network-info.json assets/validator-info.json
+          git add assets/network-info.json assets/validator-info.json assets/sentinel-info.json
           git diff --staged --quiet || git commit -m "chore: update safenet data"
           git pull --rebase origin ${{ github.ref_name }}
           git push
