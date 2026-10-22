@@ -24,8 +24,6 @@ concurrency:
 
 jobs:
   update:
-    # Disabled until the workflow is updated for Safenet Aegis.
-    if: false
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'data-update-main' || null }}
     # A run takes minutes, a cold start included. Fail a stuck run early, so it
