@@ -11,9 +11,16 @@ on:
       network:
         type: choice
         description: Safenet network to update
-        options: 
-          - beta
+        options:
+          - aegis
           - devnet
+
+# One run per branch at a time, so two runs never race on the database cache
+# or the push. A running job is never cancelled; a newer run replaces any run
+# still waiting.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -21,11 +28,14 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'data-update-main' || null }}
+    # A run takes minutes, a cold start included. Fail a stuck run early, so it
+    # does not hold up the run queued behind it until GitHub's 6h limit.
+    timeout-minutes: 60
 
     env:
-      IMAGE: ghcr.io/safe-fndn/safenet-staking-scripts:beta
-      ENV_FILE: config/${{ github.event.inputs.network || 'beta' }}.env
-      DATABASE_FILE: /workspace/safenet.${{ github.event.inputs.network || 'beta' }}.db
+      IMAGE: ghcr.io/safe-fndn/safenet-staking-scripts:main
+      ENV_FILE: config/${{ github.event.inputs.network || 'aegis' }}.env
+      DATABASE_FILE: /workspace/safenet.${{ github.event.inputs.network || 'aegis' }}.db
 
     steps:
       - uses: actions/checkout@v6
@@ -37,9 +47,9 @@ jobs:
       - name: Safenet Database Cache
         uses: actions/cache@v4
         with:
-          path: safenet.${{ github.event.inputs.network || 'beta' }}.db
-          key: safenet-${{ github.event.inputs.network || 'beta' }}-db-${{ github.run_id }}
-          restore-keys: safenet-${{ github.event.inputs.network || 'beta' }}-db-
+          path: safenet.${{ github.event.inputs.network || 'aegis' }}.db
+          key: safenet-${{ github.event.inputs.network || 'aegis' }}-db-${{ github.run_id }}
+          restore-keys: safenet-${{ github.event.inputs.network || 'aegis' }}-db-
 
       # Fetch and index on-chain events into the local database. This must run
       # before any of the recording commands below.
@@ -80,7 +90,7 @@ jobs:
       # assets on the correct branch. This allows us to test workflows on PR
       # branches with cache and without unexpected update errors.
       - name: Commit Changes
-        if: ${{ (github.ref_name == 'main' && (github.event.inputs.network || 'beta') == 'beta') || (github.ref_name == 'devnet' && github.event.inputs.network == 'devnet') }}
+        if: ${{ (github.ref_name == 'main' && (github.event.inputs.network || 'aegis') == 'aegis') || (github.ref_name == 'devnet' && github.event.inputs.network == 'devnet') }}
         run: |
           make fix
           git config user.name "github-actions[bot]"
