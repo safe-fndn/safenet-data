@@ -1,8 +1,8 @@
 # safenet-data
 
-Data and JSON files for Safenet Beta, Safenet Aegis, and potentially future Safenet versions. Contains network stats, validator info, and rewards distribution data.
+Data and JSON files for Safenet Beta, Safenet Aegis, and potentially future Safenet versions. Contains network stats, validator info, sentinel info, and rewards distribution data.
 
-> **Auto-updates:** `assets/network-info.json` and the `participation_rate_14d` field in `assets/validator-info.json` are updated automatically every 3h. All other validator details are edited manually. Rewards data is updated manually, on a regular basis, if SafeDAO approves proposal for rewards distribution.
+> **Auto-updates:** `assets/network-info.json` and the `participation_rate_14d` field in `assets/validator-info.json` and `assets/sentinel-info.json` are updated automatically every 3h. All other validator and sentinel details are edited manually. Rewards data is updated manually, on a regular basis, if SafeDAO approves proposal for rewards distribution.
 
 ---
 
@@ -70,6 +70,44 @@ Commission percentage applied to any possible rewards.
 #### `participation_rate_14d`
 
 Average participation rate (%) over the last 14 days, across the transactions attested by the Safenet Aegis consensus contract [`0xc855761D619f6002923507cE68B84d7689C2aa96`](https://gnosisscan.io/address/0xc855761D619f6002923507cE68B84d7689C2aa96) on Gnosis Chain. Computed by joining `SignCompleted` events with `SignShared` on `selection_root` and measuring the validator's participation rate across those events.
+
+```json
+"participation_rate_14d": 0.8523
+```
+
+---
+
+## Sentinel Info
+
+See [`assets/sentinel-info.json`](./assets/sentinel-info.json) for current data.
+
+#### `address`
+
+Ethereum address of the sentinel.
+
+```json
+"address": "0x1111111111111111111111111111111111111111"
+```
+
+#### `label`
+
+Human-readable display name for the sentinel.
+
+```json
+"label": "Sentinel A"
+```
+
+#### `is_active`
+
+`true` if the sentinel is currently active, `false` otherwise. Edited manually.
+
+```json
+"is_active": true
+```
+
+#### `participation_rate_14d`
+
+Average participation rate (%) over the last 14 days, across the requests made to the Safenet Aegis SentinelOracle [`0x4F61B8832978e83b80D69551AEf07557DBE41d03`](https://gnosisscan.io/address/0x4F61B8832978e83b80D69551AEf07557DBE41d03) on Gnosis Chain. Computed as the share of `NewRequest` events in the period that the sentinel emitted a `Revealed` event for. A reveal counts towards the period of its request, not the period it was revealed in.
 
 ```json
 "participation_rate_14d": 0.8523
