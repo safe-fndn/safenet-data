@@ -1,0 +1,39 @@
+name: index
+
+on:
+  schedule:
+    - cron: '23 1 * * *'  # Daily at 01:23
+  workflow_dispatch:
+
+concurrency:
+  group: index-snapshot-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Safenet Database Cache
+        uses: ./.github/actions/aegis-cache
+        with:
+          restore-only: 'true'
+
+      - name: Index Events
+        uses: ./.github/actions/staking-scripts
+        with:
+          command: index
+          debug: 'true'
+
+      # Steps run only on success by default, so failed indexes aren't archived.
+      - name: Archive snapshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: index-snapshot-aegis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: safenet.aegis.db
+          if-no-files-found: error
