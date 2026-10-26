@@ -117,4 +117,4 @@ Average participation rate (%) over the last 14 days, across the requests made t
 
 ## rewards
 
-Merkle proofs and associated data required for Safenet Beta rewards distribution, should SafeDAO vote to approve a rewards proposal. Updated manually if there is an approved SafeDAO proposal for rewards.
+Merkle proofs and associated data required for Safenet Aegis rewards distribution, mirrors the files corresponding to the onchain `contenthash` record for `rewards.safenet-gov.eth`. This is provided as a convenience, the onchain record is the source of truth.
