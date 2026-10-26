@@ -1,15 +1,10 @@
 name: distribution
 
 on:
-  # Check daily for executed proposals, including between reward periods.
+  # Check for settled reward periods every three hours.
   schedule:
-    - cron: '23 4 * * *'
+    - cron: '0 2-23/3 * * *'  # Every 3h at 02:00, 05:00, etc. UTC.
   workflow_dispatch:
-    inputs:
-      verifyFromGenesis:
-        description: Verify without restoring the event database cache
-        type: boolean
-        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,216 +13,90 @@ concurrency:
 permissions:
   contents: read
 
-# Use Bash explicitly for consistent fail-fast behavior, including pipefail.
-defaults:
-  run:
-    shell: bash
-
 env:
   GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
-  sync:
+  status:
     runs-on: ubuntu-latest
-    env:
-      IPFS_PATH: ${{ runner.temp }}/distribution-ipfs
-    environment: ${{ github.ref_name == 'main' && 'data-update-main' || null }}
-    timeout-minutes: 30
-    outputs:
-      image: ${{ steps.image.outputs.image }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ssh-key: ${{ secrets.DATA_BOT_SSH_KEY }}
+    timeout-minutes: 10
 
-      # Pin every command and job in this run to the same code and KYC inputs.
-      - name: Resolve Docker image
-        id: image
-        run: |
-          docker pull ghcr.io/safe-fndn/safenet-staking-scripts:main
-          image=$(docker image inspect --format '{{index .RepoDigests 0}}' ghcr.io/safe-fndn/safenet-staking-scripts:main)
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-          mkdir -p .distribution
-
-      - uses: ./.github/actions/setup-ipfs
-        with:
-          version: v0.43.1
-          sha256: '3f2bf974ab2a3ec6d997fac7d8cb46f59983a7cddd0b55ef998e6ce379155fb2'
-
-      # status verifies the ENS-pinned CAR against the onchain payout root.
-      - name: Resolve executed rewards distribution
-        uses: ./.github/actions/staking-scripts
-        with:
-          image: ${{ steps.image.outputs.image }}
-          command: status
-          stdout-file: .distribution/status.json
-
-      - name: Download published rewards CAR
-        run: |
-          cid=$(jq -er '.previousCid' .distribution/status.json)
-          [[ "$cid" =~ ^b[a-z2-7]+$ ]]
-          source config/aegis.env
-          curl --fail --location --silent --show-error --retry 3 \
-            --header 'Accept: application/vnd.ipld.car; version=1' \
-            "${IPFS_GATEWAY_URL%/}/ipfs/$cid?format=car" \
-            -o .distribution/published.car
-
-      # Verify these exact CAR bytes before extraction. Fail if ENS advanced.
-      - name: Validate downloaded CAR
-        uses: ./.github/actions/staking-scripts
-        with:
-          image: ${{ steps.image.outputs.image }}
-          command: status
-          args: '["--previousCar", "/workspace/.distribution/published.car"]'
-          stdout-file: .distribution/confirmed-status.json
-
-      - name: Extract published rewards CAR
-        run: |
-          cid=$(jq -er '.previousCid' .distribution/confirmed-status.json)
-          ipfs init --profile=test
-          ipfs --offline dag import .distribution/published.car
-          ipfs --offline get "/ipfs/$cid" --output=.distribution/published-rewards
-
-      - name: Update rewards assets
-        run: |
-          test "$(jq -er '.previousCid' .distribution/status.json)" = "$(jq -er '.previousCid' .distribution/confirmed-status.json)"
-          current=$(jq -er '.rewardsUntil' assets/rewards/latest.json)
-          published=$(jq -er '.rewardsUntil' .distribution/published-rewards/latest.json)
-          current=$(date -d "$current" +%s)
-          published=$(date -d "$published" +%s)
-          if (( published < current )); then
-            echo "Refusing to move rewards history backwards" >&2
-            exit 1
-          fi
-          rsync -rc --delete .distribution/published-rewards/ assets/rewards/
-          while IFS= read -r -d '' file; do jq empty "$file"; done < <(find assets/rewards -name '*.json' -print0)
-          make fix
-
-      - name: Commit executed distribution
-        if: github.ref_name == 'main'
-        run: |
-          cid=$(jq -er '.previousCid' .distribution/confirmed-status.json)
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/rewards/
-          if ! git diff --staged --quiet; then
-            git commit -m "chore: sync executed rewards distribution $cid"
-            git pull --rebase origin main
-            git push
-          fi
-
-  export:
-    needs: sync
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
     outputs:
       settled: ${{ steps.status.outputs.settled }}
       periodEnd: ${{ steps.status.outputs.periodEnd }}
+
     steps:
       - uses: actions/checkout@v6
 
-      - run: mkdir -p .distribution
+      - run: mkdir -p distribution
 
-      - name: Check next distribution
+      - name: Resolve executed rewards distribution
         uses: ./.github/actions/staking-scripts
         with:
-          image: ${{ needs.sync.outputs.image }}
           command: status
-          stdout-file: .distribution/status.json
+          stdout-file: distribution/status.json
 
       - name: Read distribution status
         id: status
         run: |
-          settled=$(jq -r '.settled' .distribution/status.json)
-          period_end=$(jq -er '.period.toTimestamp' .distribution/status.json)
+          settled=$(jq -r '.settled' distribution/status.json)
+          period_end=$(jq -er '.period.toTimestamp' distribution/status.json)
           [[ "$settled" =~ ^(true|false)$ && "$period_end" =~ ^[0-9]+$ ]]
           printf 'settled=%s\nperiodEnd=%s\n' "$settled" "$period_end" >> "$GITHUB_OUTPUT"
           if [[ "$settled" != true ]]; then
             echo "Period $period_end has not settled yet." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Safenet Database Cache
-        if: steps.status.outputs.settled == 'true'
-        uses: ./.github/actions/aegis-cache
-        with:
-          restore-only: 'true'
-
-      # Export indexes through settlement itself; a separate index is unnecessary.
-      - name: Export next distribution
-        if: steps.status.outputs.settled == 'true'
-        uses: ./.github/actions/staking-scripts
-        with:
-          image: ${{ needs.sync.outputs.image }}
-          command: export
-          args: '["--out", "/workspace/distribution-assets"]'
-          stdout-file: .distribution/export-summary.txt
-
-      - name: Check exported period
-        if: steps.status.outputs.settled == 'true'
-        env:
-          PERIOD_END: ${{ steps.status.outputs.periodEnd }}
-        run: |
-          # ENS may advance between status and export. Reject another period.
-          test -f "distribution-assets/rewards-$PERIOD_END.car"
-          cp .distribution/export-summary.txt distribution-assets/export-summary.txt
-
-      - name: Transfer candidate for independent verification
-        if: steps.status.outputs.settled == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: distribution-candidate-${{ github.run_id }}-${{ github.run_attempt }}
-          path: distribution-assets/
-          retention-days: 1
-          if-no-files-found: error
-
-  verify:
-    needs: [sync, export]
-    if: needs.export.outputs.settled == 'true'
+  distribution:
+    needs: status
+    if: needs.status.outputs.settled == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v6
 
       - name: Safenet Database Cache
-        if: ${{ !inputs.verifyFromGenesis }}
         uses: ./.github/actions/aegis-cache
         with:
           restore-only: 'true'
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: distribution-candidate-${{ github.run_id }}-${{ github.run_attempt }}
-          path: distribution-assets
+      - run: mkdir -p distribution/out
 
-      - name: Read candidate CID
-        id: candidate
-        env:
-          PERIOD_END: ${{ needs.export.outputs.periodEnd }}
-        run: |
-          mkdir -p .distribution
-          (cd distribution-assets && sha256sum -c SHA256SUMS)
-          test -f "distribution-assets/rewards-$PERIOD_END.car"
-          cid=$(cat distribution-assets/cid.txt)
-          [[ "$cid" =~ ^b[a-z2-7]+$ ]]
-          echo "cid=$cid" >> "$GITHUB_OUTPUT"
-
-      - name: Independently verify distribution
+      - name: Export next distribution
         uses: ./.github/actions/staking-scripts
         with:
-          image: ${{ needs.sync.outputs.image }}
+          command: export
+          args: '["--out", "/workspace/distribution/out"]'
+          # Keep stdout outside --out, which must be empty when export starts.
+          stdout-file: distribution/export-summary.txt
+
+      - name: Summarize exported distribution
+        id: summary
+        env:
+          PERIOD_END: ${{ needs.status.outputs.periodEnd }}
+        run: |
+          test -f "distribution/out/rewards-$PERIOD_END.car"
+          cid=$(cat distribution/out/cid.txt)
+          [[ "$cid" =~ ^b[a-z2-7]+$ ]]
+          echo "cid=$cid" >> "$GITHUB_OUTPUT"
+          cat distribution/export-summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify distribution and Reality.eth proposals
+        uses: ./.github/actions/staking-scripts
+        with:
           command: verify
-          args: '["--cid", "${{ steps.candidate.outputs.cid }}"]'
-          stdout-file: .distribution/verify-summary.txt
+          args: '["--cid", "${{ steps.summary.outputs.cid }}"]'
+          stdout-file: distribution/verify-summary.txt
 
       - name: Summarize verified distribution
         run: |
-          cp .distribution/verify-summary.txt distribution-assets/verify-summary.txt
-          cat distribution-assets/export-summary.txt >> "$GITHUB_STEP_SUMMARY"
-          cat distribution-assets/verify-summary.txt >> "$GITHUB_STEP_SUMMARY"
+          cat distribution/verify-summary.txt >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload verified distribution bundle
+      - name: Upload distribution bundle
         uses: actions/upload-artifact@v7
         with:
-          name: distribution-${{ needs.export.outputs.periodEnd }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: distribution-assets/
+          name: distribution-${{ github.run_id }}-${{ github.run_attempt }}
+          path: distribution
+          retention-days: 3
           if-no-files-found: error

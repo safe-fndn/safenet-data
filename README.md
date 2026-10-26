@@ -118,7 +118,3 @@ Average participation rate (%) over the last 14 days, across the requests made t
 ## rewards
 
 Merkle proofs and associated data required for Safenet Aegis rewards distribution, mirrors the files corresponding to the onchain `contenthash` record for `rewards.safenet-gov.eth`. This is provided as a convenience, the onchain record is the source of truth.
-
-The [distribution workflow](.github/workflows/distribution.yml) runs daily at 04:23 UTC and can also be started manually. It verifies the published CAR against ENS and the onchain payout Merkle root, extracts it with IPFS, and commits changes to `assets/rewards/` on `main` using the data bot's SSH key. A proposed distribution is mirrored after execution advances the published database.
-
-When the next rewards period has settled, the workflow exports and independently verifies it, then uploads a `distribution-<periodEnd>-<runId>-<attempt>` artifact containing the CAR, proposal, Safe transaction bundles, checksums and summaries. Until execution, later runs can produce another artifact for the same period. The manual `verifyFromGenesis` option skips the database cache for verification. The workflow creates no GitHub releases and sends no onchain transactions; see the staking scripts' [operator runbook](https://github.com/safe-fndn/safenet-staking-scripts/blob/main/docs/permissionless-distribution.md) for reviewing, proposing and executing the bundle.
