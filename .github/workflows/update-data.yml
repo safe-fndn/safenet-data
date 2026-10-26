@@ -3,9 +3,8 @@
 name: Update Safenet Data
 
 on:
-  # Disabled until the workflow is updated for Safenet Aegis.
-  # schedule:
-  #   - cron: '0 */3 * * *'  # Daily at midnight and every 3h
+  schedule:
+    - cron: '0 */3 * * *'  # Daily at midnight and every 3h
   workflow_dispatch:
     inputs:
       network:
