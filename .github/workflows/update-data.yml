@@ -38,7 +38,7 @@ jobs:
         uses: ./.github/actions/staking-scripts
         with:
           command: index
-          debug: true
+          debug: 'true'
 
       # Write network totals to assets/network-info.json.
       - name: Record Totals
