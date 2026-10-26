@@ -36,4 +36,5 @@ jobs:
         with:
           name: index-snapshot-aegis-${{ github.run_id }}-${{ github.run_attempt }}
           path: safenet.aegis.db
+          retention-days: 14
           if-no-files-found: error
