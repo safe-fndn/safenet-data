@@ -1,0 +1,50 @@
+name: Safenet Staking Scripts
+description: Run a staking-scripts command with the Aegis configuration and workspace mounted.
+
+inputs:
+  command:
+    description: Staking-scripts command to execute.
+    required: true
+  args:
+    description: Command arguments as a JSON array of strings (container paths use /workspace).
+    default: '[]'
+  image:
+    description: Docker image to run.
+    default: ghcr.io/safe-fndn/safenet-staking-scripts:main
+  debug:
+    description: Enable Safenet debug logging.
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Run command
+      # Python parses the JSON arguments into an argument list, preserving spaces
+      # and special characters without shell splitting or evaluation.
+      shell: python
+      env:
+        SCRIPT_COMMAND: ${{ inputs.command }}
+        SCRIPT_ARGS: ${{ inputs.args }}
+        SCRIPT_IMAGE: ${{ inputs.image }}
+        SCRIPT_DEBUG: ${{ inputs.debug }}
+      run: |
+        import json
+        import os
+        import subprocess
+        import sys
+
+        args = json.loads(os.environ['SCRIPT_ARGS'])
+        if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
+            raise ValueError('args must be a JSON array of strings')
+
+        workspace = os.environ['GITHUB_WORKSPACE']
+        command = [
+            'docker', 'run', '--rm',
+            '-v', f'{workspace}:/workspace',
+            '--env-file', f'{workspace}/config/aegis.env',
+            '-e', 'DATABASE_FILE=/workspace/safenet.aegis.db',
+            '-e', 'DEBUG=safenet,safenet:*' if os.environ['SCRIPT_DEBUG'] == 'true' else 'DEBUG=',
+            '-e', 'GITHUB_TOKEN',
+            os.environ['SCRIPT_IMAGE'], os.environ['SCRIPT_COMMAND'], *args,
+        ]
+        sys.exit(subprocess.run(command).returncode)

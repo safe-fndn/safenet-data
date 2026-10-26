@@ -22,11 +22,6 @@ jobs:
     # does not hold up the run queued behind it until GitHub's 6h limit.
     timeout-minutes: 60
 
-    env:
-      IMAGE: ghcr.io/safe-fndn/safenet-staking-scripts:main
-      ENV_FILE: config/aegis.env
-      DATABASE_FILE: /workspace/safenet.aegis.db
-
     steps:
       - uses: actions/checkout@v6
         with:
@@ -35,47 +30,41 @@ jobs:
       # Restore the SQLite database from the previous run so that event indexing
       # is incremental rather than starting from scratch each time.
       - name: Safenet Database Cache
-        uses: actions/cache@v4
-        with:
-          path: safenet.aegis.db
-          key: safenet-aegis-db-${{ github.run_id }}
-          restore-keys: safenet-aegis-db-
+        uses: ./.github/actions/aegis-cache
 
       # Fetch and index on-chain events into the local database. This must run
       # before any of the recording commands below.
       - name: Index Events
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            --env-file "$ENV_FILE" \
-            -e DATABASE_FILE \
-            -e DEBUG='safenet,safenet:*' \
-            "$IMAGE" \
-            index
+        uses: ./.github/actions/staking-scripts
+        with:
+          command: index
+          debug: true
 
       # Write network totals to assets/network-info.json.
       - name: Record Totals
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            --env-file "$ENV_FILE" \
-            -e DATABASE_FILE \
-            "$IMAGE" \
-            totals --record /workspace
+        uses: ./.github/actions/staking-scripts
+        with:
+          command: totals
+          args: '["--record", "/workspace"]'
 
       # Update participation rates in assets/validator-info.json and
       # assets/sentinel-info.json.
-      - name: Record Participation
+      - name: Participation Period
+        id: participation
         run: |
           end="$(date -d "$(date '+%H:00:00')" '+%s')"
           start="$((end - 1209600))"
           echo "computing participation for: $(date -d @$start) - $(date -d @$end)"
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            --env-file "$ENV_FILE" \
-            -e DATABASE_FILE \
-            "$IMAGE" \
-            participation --record /workspace --rewardPeriodStart "$start" --rewardPeriodEnd "$end"
+          printf 'start=%s\nend=%s\n' "$start" "$end" >> "$GITHUB_OUTPUT"
+
+      - name: Record Participation
+        uses: ./.github/actions/staking-scripts
+        with:
+          command: participation
+          args: >-
+            ["--record", "/workspace",
+             "--rewardPeriodStart", "${{ steps.participation.outputs.start }}",
+             "--rewardPeriodEnd", "${{ steps.participation.outputs.end }}"]
 
       # Commit any updated asset files back to the repo. Only run when updating
       # assets on the correct branch. This allows us to test workflows on PR
