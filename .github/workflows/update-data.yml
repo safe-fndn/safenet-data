@@ -4,11 +4,11 @@ name: Update Safenet Data
 
 on:
   schedule:
-    - cron: '0 */3 * * *'  # Daily at midnight and every 3h
+    - cron: '15 1-23/3 * * *'  # Every 3h at 01:15, 04:15, etc. UTC.
   workflow_dispatch:
 
-# One run per branch at a time, so two runs never race on the database cache
-# or the push. A running job is never cancelled; a newer run replaces any run
+# One run per branch at a time, so two runs never race on the push.
+# A running job is never cancelled; a newer run replaces any run
 # still waiting.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,19 +18,18 @@ jobs:
   update:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'data-update-main' || null }}
-    # A run takes minutes, a cold start included. Fail a stuck run early, so it
-    # does not hold up the run queued behind it until GitHub's 6h limit.
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v6
         with:
           ssh-key: ${{ secrets.DATA_BOT_SSH_KEY }}
 
-      # Restore the SQLite database from the previous run so that event indexing
-      # is incremental rather than starting from scratch each time.
+      # Restore the database maintained by index.yml without saving changes.
       - name: Safenet Database Cache
         uses: ./.github/actions/aegis-cache
+        with:
+          restore-only: 'true'
 
       # Fetch and index on-chain events into the local database. This must run
       # before any of the recording commands below.
