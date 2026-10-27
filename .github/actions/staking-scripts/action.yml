@@ -50,8 +50,12 @@ runs:
             '-e', 'DATABASE_FILE=/workspace/safenet.aegis.db',
             '-e', 'DEBUG=safenet,safenet:*' if os.environ['SCRIPT_DEBUG'] == 'true' else 'DEBUG=',
             '-e', 'GITHUB_TOKEN',
-            os.environ['SCRIPT_IMAGE'], os.environ['SCRIPT_COMMAND'], *args,
         ]
+        # Secret overrides for config/aegis.env values, forwarded only when set.
+        for name in ['IPFS_GATEWAY_URL']:
+            if os.environ.get(name):
+                command += ['-e', name]
+        command += [os.environ['SCRIPT_IMAGE'], os.environ['SCRIPT_COMMAND'], *args]
         output = os.environ['SCRIPT_STDOUT']
         with open(output, 'w') if output else nullcontext(None) as stdout:
             sys.exit(subprocess.run(command, stdout=stdout).returncode)

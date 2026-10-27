@@ -15,6 +15,7 @@ permissions:
 
 env:
   GITHUB_TOKEN: ${{ github.token }}
+  IPFS_GATEWAY_URL: ${{ secrets.IPFS_GATEWAY_URL }}
 
 jobs:
   status:
