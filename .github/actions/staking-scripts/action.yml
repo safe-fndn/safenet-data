@@ -14,6 +14,9 @@ inputs:
   debug:
     description: Enable Safenet debug logging.
     default: 'false'
+  stdout-file:
+    description: Optional host path to capture stdout; its parent directory must exist.
+    default: ''
 
 runs:
   using: composite
@@ -27,7 +30,9 @@ runs:
         SCRIPT_ARGS: ${{ inputs.args }}
         SCRIPT_IMAGE: ${{ inputs.image }}
         SCRIPT_DEBUG: ${{ inputs.debug }}
+        SCRIPT_STDOUT: ${{ inputs.stdout-file }}
       run: |
+        from contextlib import nullcontext
         import json
         import os
         import subprocess
@@ -47,4 +52,6 @@ runs:
             '-e', 'GITHUB_TOKEN',
             os.environ['SCRIPT_IMAGE'], os.environ['SCRIPT_COMMAND'], *args,
         ]
-        sys.exit(subprocess.run(command).returncode)
+        output = os.environ['SCRIPT_STDOUT']
+        with open(output, 'w') if output else nullcontext(None) as stdout:
+            sys.exit(subprocess.run(command, stdout=stdout).returncode)
