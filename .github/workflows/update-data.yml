@@ -50,7 +50,7 @@ jobs:
       # Update participation rates in assets/validator-info.json and
       # assets/sentinel-info.json.
       - name: Participation Period
-        id: participation
+        id: period
         run: |
           end="$(date -d "$(date '+%H:00:00')" '+%s')"
           start="$((end - 1209600))"
@@ -63,8 +63,8 @@ jobs:
           command: participation
           args: >-
             ["--record", "/workspace",
-             "--rewardPeriodStart", "${{ steps.participation.outputs.start }}",
-             "--rewardPeriodEnd", "${{ steps.participation.outputs.end }}"]
+             "--rewardPeriodStart", "${{ steps.period.outputs.start }}",
+             "--rewardPeriodEnd", "${{ steps.period.outputs.end }}"]
 
       # Commit any updated asset files back to the repo. Only run when updating
       # assets on the correct branch. This allows us to test workflows on PR
