@@ -1,0 +1,26 @@
+name: Aegis Database Cache
+description: Restore the shared Aegis event database, optionally saving it on success.
+
+inputs:
+  restore-only:
+    description: Restore the database without saving changes to the shared cache.
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Restore and save database
+      if: inputs.restore-only != 'true'
+      uses: actions/cache@v4
+      with:
+        path: safenet.aegis.db
+        key: safenet-aegis-db-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: safenet-aegis-db-
+
+    - name: Restore database
+      if: inputs.restore-only == 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: safenet.aegis.db
+        key: safenet-aegis-db-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: safenet-aegis-db-
