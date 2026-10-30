@@ -18,14 +18,14 @@
 		"commission": 0.05,
 		"is_active": false,
 		"label": "RockawayX",
-		"participation_rate_14d": 0.06321839080459771
+		"participation_rate_14d": 0.05927342256214149
 	},
 	{
 		"address": "0xCc00DE0eA14c08669b26DcBFE365dBD9890B04D9",
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Core Contributors",
-		"participation_rate_14d": 0.9980842911877394
+		"participation_rate_14d": 0.9980879541108987
 	},
 	{
 		"address": "0xD8997c2a94052C4FB79B53b3e255c1F07c99305B",
