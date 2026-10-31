@@ -3,24 +3,24 @@
 		"address": "0x101d59DBB8C5e70f45D52634f23800fCa4Fbe031",
 		"is_active": true,
 		"label": "OpenCover",
-		"participation_rate_14d": 0.3935483870967742
+		"participation_rate_14d": 0.391653290529695
 	},
 	{
 		"address": "0x6D081448c04d9ef7cf8EcF54207B1931ecc25312",
 		"is_active": true,
 		"label": "Candide",
-		"participation_rate_14d": 0.7758064516129032
+		"participation_rate_14d": 0.7736757624398074
 	},
 	{
 		"address": "0xb28eb357BFA420C17Bae3E6BfDB50094Fb5BabF2",
 		"is_active": true,
 		"label": "IntentGuard",
-		"participation_rate_14d": 0.16774193548387098
+		"participation_rate_14d": 0.16693418940609953
 	},
 	{
 		"address": "0xc84a0928632382E75c543ACCeD101B9525027362",
 		"is_active": true,
 		"label": "BlockSec",
-		"participation_rate_14d": 0.9919354838709677
+		"participation_rate_14d": 0.9919743178170144
 	}
 ]
