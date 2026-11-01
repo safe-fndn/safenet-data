@@ -11,21 +11,21 @@
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Greenfield",
-		"participation_rate_14d": 0.9840142095914742
+		"participation_rate_14d": 0.9822695035460993
 	},
 	{
 		"address": "0xb0E735D4a3b70195420E0ae933689A55750CFcd2",
 		"commission": 0.05,
 		"is_active": false,
 		"label": "RockawayX",
-		"participation_rate_14d": 0.055062166962699825
+		"participation_rate_14d": 0.0549645390070922
 	},
 	{
 		"address": "0xCc00DE0eA14c08669b26DcBFE365dBD9890B04D9",
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Core Contributors",
-		"participation_rate_14d": 0.9982238010657194
+		"participation_rate_14d": 0.99822695035461
 	},
 	{
 		"address": "0xD8997c2a94052C4FB79B53b3e255c1F07c99305B",
