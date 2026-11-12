@@ -11,7 +11,7 @@
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Greenfield",
-		"participation_rate_14d": 0.8662790697674418
+		"participation_rate_14d": 0.8647058823529412
 	},
 	{
 		"address": "0xb0E735D4a3b70195420E0ae933689A55750CFcd2",
@@ -39,6 +39,6 @@
 		"commission": 0.05,
 		"is_active": true,
 		"label": "Safe Labs",
-		"participation_rate_14d": 0.998062015503876
+		"participation_rate_14d": 0.9980392156862745
 	}
 ]
