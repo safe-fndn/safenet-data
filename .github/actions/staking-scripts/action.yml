@@ -12,10 +12,10 @@ inputs:
     description: Docker image to run.
     default: ghcr.io/safe-fndn/safenet-staking-scripts:main
   debug:
-    description: Enable Safenet debug logging.
+    description: Enable Safenet debug logging (always enabled when the run has GitHub Actions debug logging enabled).
     default: 'false'
   stdout-file:
-    description: Optional host path to capture stdout; its parent directory must exist.
+    description: Optional host path to also capture stdout to (it is still echoed to the job log); its parent directory must exist.
     default: ''
 
 runs:
@@ -29,10 +29,9 @@ runs:
         SCRIPT_COMMAND: ${{ inputs.command }}
         SCRIPT_ARGS: ${{ inputs.args }}
         SCRIPT_IMAGE: ${{ inputs.image }}
-        SCRIPT_DEBUG: ${{ inputs.debug }}
+        SCRIPT_DEBUG: ${{ inputs.debug == 'true' || runner.debug == '1' }}
         SCRIPT_STDOUT: ${{ inputs.stdout-file }}
       run: |
-        from contextlib import nullcontext
         import json
         import os
         import subprocess
@@ -57,5 +56,18 @@ runs:
                 command += ['-e', name]
         command += [os.environ['SCRIPT_IMAGE'], os.environ['SCRIPT_COMMAND'], *args]
         output = os.environ['SCRIPT_STDOUT']
-        with open(output, 'w') if output else nullcontext(None) as stdout:
-            sys.exit(subprocess.run(command, stdout=stdout).returncode)
+        if not output:
+            sys.exit(subprocess.run(command).returncode)
+
+        # Tee stdout to both the file and the job log, so that output preceding
+        # a failure is visible without having to download any artifacts.
+        with open(output, 'wb') as file:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE)
+            for line in process.stdout:
+                file.write(line)
+                sys.stdout.buffer.write(line)
+                sys.stdout.buffer.flush()
+            returncode = process.wait()
+        if returncode != 0:
+            print(f'::error::staking-scripts {os.environ["SCRIPT_COMMAND"]} exited with code {returncode}')
+        sys.exit(returncode)
