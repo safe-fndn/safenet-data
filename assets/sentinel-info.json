@@ -22,5 +22,11 @@
 		"is_active": true,
 		"label": "BlockSec",
 		"participation_rate_14d": 0.933933933933934
+	},
+	{
+		"address": "0x3BF9263Cc7Bb2312F69F5481c3337553469140a5",
+		"is_active": false,
+		"label": "Hacken",
+		"participation_rate_14d": 0
 	}
 ]
